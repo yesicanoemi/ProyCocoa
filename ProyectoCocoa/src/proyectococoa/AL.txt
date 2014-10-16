@@ -1,0 +1,5 @@
+<RESERVADA,clase>
+<UNESPACIO, >
+<ID,Impar>
+<DOSESPACIOS,  >
+<RESERVADA,propiedades>
