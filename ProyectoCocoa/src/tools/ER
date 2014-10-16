@@ -110,7 +110,7 @@ nomClase =[A-Z]+{variables}
 "retornar"      {clasif=yytext(); return RESERVADA;}
 {or}            {clasif=yytext(); return RESERVADA;}
 "verdadero"     {clasif=yytext(); return RESERVADA;}
-
+"principal"     {clasif=yytext(); return RESERVADA;}
 
 /*IDENTIFICADORES*/
 {variables}+       {clasif=yytext(); return ID;}
