@@ -1,0 +1,155 @@
+package tools;
+import tools.Identificador;
+import static tools.Identificador.*;
+%%
+%class Lexico
+%type Identificador
+%line
+comilla= ["a-zA-Z"]
+entero= [0-9]
+exponente=["x10""X10"eE]
+flotante={entero}[\.]{entero}+{exponente}[0-9]+
+variables=[a-zA-Z]+[0-9]*
+//Espacio=[ \t\r\n]
+and=[a][n][d]|[A][N][D]
+or=[o][r]|[O][R]
+entradaC = [^\r\n]
+finL = [\r|\n|\r\n]
+comentarioA = "/*" [^*] ~"*/" | "/*" "*"+ "/"
+comentarioB = "//" {entradaC}*{finL}?
+nomClase =[A-Z]+{variables}
+
+%{
+    public String clasif;
+    public boolean estado=true;
+    private int contador;
+%}
+
+%init{
+    contador=0;
+%init}
+
+%state PROPIEDADES, VARCLASE, TODO, ERESERV, ESIGNOS, EVARIABLES
+
+%%
+<YYINITIAL>{
+    "clase" {
+                yybegin(VARCLASE);
+                clasif=yytext();
+                return RESERVADA; 
+            }
+    ("  ") {clasif=yytext(); return DOSESPACIOS;}
+    (" ") {clasif=yytext(); return UNESPACIO;}
+    [\r\f] {}
+    [^"clase"]|.|[0-9] {
+                yyclose();
+            }
+}
+<PROPIEDADES>{
+    "propiedades" {yybegin(ERESERV);clasif=yytext(); return RESERVADA;}
+    ("  ") {clasif=yytext(); return DOSESPACIOS;}
+    (" ") {clasif=yytext(); return UNESPACIO;}
+    [\r\f] {}
+    [0-9]|. {yyclose();}
+}
+
+<VARCLASE>{    
+    {nomClase} {yybegin(PROPIEDADES); clasif=yytext(); return ID;}
+    ("  ") {clasif=yytext(); return DOSESPACIOS;}
+    (" ") {clasif=yytext(); return UNESPACIO;}    
+    [\r\f] {}
+    [0-9]{nomClase}|. {yyclose();}
+}
+<ERESERV>{
+    /*RESERVADAS*/
+    "boleano" {yybegin(EVARIABLES);clasif=yytext(); return RESERVADA;}
+    "cadena" {yybegin(EVARIABLES); clasif=yytext(); return RESERVADA;}
+    "entero" {yybegin(EVARIABLES); clasif=yytext(); return RESERVADA;}
+    "decimal" {yybegin(EVARIABLES); clasif=yytext(); return RESERVADA;}
+    "metodos" {clasif=yytext(); return RESERVADA;}
+    ("  ") {clasif=yytext(); return DOSESPACIOS;}
+    (" ") {clasif=yytext(); return UNESPACIO;}    
+    [\r\f] {}
+    [0-9]|. {yyclose();}
+}
+<EVARIABLES>{
+    {variables}+ {yybegin(ESIGNOS); clasif=yytext(); return ID;}
+    ("  ") {clasif=yytext(); return DOSESPACIOS;}
+    (" ") {clasif=yytext(); return UNESPACIO;}        
+    
+}
+<ESIGNOS>{
+    ";" {yybegin(ERESERV); clasif=yytext(); return FNLINEA;}
+    "," {yybegin(EVARIABLES); clasif=yytext(); return ESPECIALES;}
+    ("  ") {clasif=yytext(); return DOSESPACIOS;}
+    (" ") {clasif=yytext(); return UNESPACIO;}        
+    . {yyclose();}
+}
+<TODO>{
+"\""       {clasif=yytext(); return ESPECIALES;}
+
+{flotante}      {clasif=yytext(); return NUMERO;}
+{entero}+       {clasif=yytext(); return NUMERO;}
+
+/*Palabras Reservadas*/
+{and}           {clasif=yytext(); return RESERVADA;}
+"clase"         {clasif=yytext(); return RESERVADA;}
+"desde"         {clasif=yytext(); return RESERVADA;}
+"devolver"      {clasif=yytext(); return RESERVADA;}
+"entonces"      {clasif=yytext(); return RESERVADA;}
+"escribir"      {clasif=yytext(); return RESERVADA;}
+"extiende"      {clasif=yytext(); return RESERVADA;}
+"falso"         {clasif=yytext(); return RESERVADA;}
+"hacer"         {clasif=yytext(); return RESERVADA;}
+"incrementar"   {clasif=yytext(); return RESERVADA;}
+"leer"          {clasif=yytext(); return RESERVADA;}
+"mientras"      {clasif=yytext(); return RESERVADA;}
+"NULO"|"nulo"   {clasif=yytext(); return RESERVADA;}
+"sino"          {clasif=yytext(); return RESERVADA;}
+"si"            {clasif=yytext(); return RESERVADA;}
+"retornar"      {clasif=yytext(); return RESERVADA;}
+{or}            {clasif=yytext(); return RESERVADA;}
+"verdadero"     {clasif=yytext(); return RESERVADA;}
+
+
+/*IDENTIFICADORES*/
+{variables}+       {clasif=yytext(); return ID;}
+
+/*OPERADORES*/
+"++"            {clasif=yytext(); return OPERADOR;}
+"+"             {clasif=yytext(); return OPERADOR;}
+"--"            {clasif=yytext(); return OPERADOR;}
+"-"             {clasif=yytext(); return OPERADOR;} 
+"*"             {clasif=yytext(); return OPERADOR;}
+"%"             {clasif=yytext(); return OPERADOR;}
+"=="            {clasif=yytext(); return OPERADOR;}
+"="             {clasif=yytext(); return OPERADOR;}
+"/"             {clasif=yytext(); return OPERADOR;}
+">"             {clasif=yytext(); return OPERADOR;}
+"<"             {clasif=yytext(); return OPERADOR;}
+"!="            {clasif=yytext(); return OPERADOR;}
+"|"             {clasif=yytext(); return OPERADOR;}
+
+/*ESPECIALES*/
+";"             {clasif=yytext(); return FNLINEA;}
+"."             {clasif=yytext(); return ESPECIALES;}
+"("             {clasif=yytext(); return ESPECIALES;}
+")"             {clasif=yytext(); return ESPECIALES;}
+","             {clasif=yytext(); return ESPECIALES;}
+"["             {clasif=yytext(); return ESPECIALES;}
+"]"             {clasif=yytext(); return ESPECIALES;}
+
+/*COMENTARIOS*/
+({comentarioB})+ {clasif=yytext(); return COMENTARIOS;}
+({comentarioA})+ {clasif=yytext(); return COMENTARIOS;}
+
+/*ESPACIOS*/
+    ("  ") {clasif=yytext(); return DOSESPACIOS;}
+    (" ") {clasif=yytext(); return UNESPACIO;}
+    
+
+
+/*FIN DE LINEA*/
+}
+[\r\n\f] {}
+. {yyclose(); return ERROR;}
